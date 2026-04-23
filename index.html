@@ -12,9 +12,10 @@
     background: #f7f7f7;
     margin: 0;
     text-align: center;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
-  /* HEADER */
   #header {
     margin-top: 40px;
   }
@@ -44,7 +45,6 @@
     border-radius: 2px;
   }
 
-  /* CONTAINER */
   #container {
     background: white;
     padding: 30px;
@@ -54,7 +54,6 @@
     box-shadow: 0 12px 35px rgba(0,0,0,0.06);
   }
 
-  /* GRID */
   #grid {
     display: grid;
     grid-template-columns: repeat(15, 40px);
@@ -71,7 +70,7 @@
     line-height: 40px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: 0.15s;
   }
 
   .cell:hover {
@@ -87,14 +86,9 @@
     color: white;
   }
 
-  /* WORD LIST */
   h3 {
     margin-top: 25px;
     font-weight: 500;
-  }
-
-  #words {
-    margin-top: 10px;
   }
 
   .word {
@@ -104,7 +98,6 @@
     border-radius: 20px;
     border: 1px solid #ddd;
     font-size: 13px;
-    transition: 0.2s;
   }
 
   .word.found {
@@ -112,7 +105,6 @@
     color: white;
     border: none;
   }
-
 </style>
 </head>
 
@@ -146,118 +138,169 @@ const words = [
 const grid = Array.from({ length: size }, () => Array(size).fill(""));
 
 const directions = [
-  [0, 1], [1, 0], [1, 1], [-1, 1]
+  [0,1],[1,0],[1,1],[-1,1],
+  [0,-1],[-1,0],[-1,-1],[1,-1]
 ];
 
+// Place words
 function placeWord(word) {
   let placed = false;
 
   while (!placed) {
-    const dir = directions[Math.floor(Math.random() * directions.length)];
-    const row = Math.floor(Math.random() * size);
-    const col = Math.floor(Math.random() * size);
+    const dir = directions[Math.floor(Math.random()*directions.length)];
+    const row = Math.floor(Math.random()*size);
+    const col = Math.floor(Math.random()*size);
 
-    let r = row;
-    let c = col;
+    let r = row, c = col;
     let fits = true;
 
-    for (let i = 0; i < word.length; i++) {
-      if (
-        r < 0 || r >= size ||
-        c < 0 || c >= size ||
-        (grid[r][c] !== "" && grid[r][c] !== word[i])
-      ) {
+    for (let i=0;i<word.length;i++) {
+      if (r<0||c<0||r>=size||c>=size ||
+          (grid[r][c] !== "" && grid[r][c] !== word[i])) {
         fits = false;
         break;
       }
-      r += dir[0];
-      c += dir[1];
+      r+=dir[0];
+      c+=dir[1];
     }
 
     if (!fits) continue;
 
-    r = row;
-    c = col;
-
-    for (let i = 0; i < word.length; i++) {
-      grid[r][c] = word[i];
-      r += dir[0];
-      c += dir[1];
+    r=row; c=col;
+    for (let i=0;i<word.length;i++) {
+      grid[r][c]=word[i];
+      r+=dir[0];
+      c+=dir[1];
     }
 
-    placed = true;
+    placed=true;
   }
 }
 
+// Fill grid
 function fillGrid() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  for (let i = 0; i < size; i++) {
-    for (let j = 0; j < size; j++) {
-      if (grid[i][j] === "") {
-        grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
+  for (let i=0;i<size;i++) {
+    for (let j=0;j<size;j++) {
+      if (grid[i][j]==="") {
+        grid[i][j] = letters[Math.floor(Math.random()*letters.length)];
       }
     }
   }
 }
 
+// Render
 const gridEl = document.getElementById("grid");
+const wordsEl = document.getElementById("words");
 
 function renderGrid() {
-  gridEl.innerHTML = "";
-  grid.forEach((row, r) => {
-    row.forEach((cell, c) => {
-      const div = document.createElement("div");
-      div.className = "cell";
-      div.textContent = cell;
-      div.dataset.row = r;
-      div.dataset.col = c;
+  gridEl.innerHTML="";
+  grid.forEach((row,r)=>{
+    row.forEach((cell,c)=>{
+      const div=document.createElement("div");
+      div.className="cell";
+      div.textContent=cell;
+      div.dataset.row=r;
+      div.dataset.col=c;
       gridEl.appendChild(div);
     });
   });
 }
 
-const wordsEl = document.getElementById("words");
-
 function renderWords() {
-  words.forEach(word => {
-    const div = document.createElement("div");
-    div.className = "word";
-    div.id = word;
-    div.textContent = word;
+  words.forEach(word=>{
+    const div=document.createElement("div");
+    div.className="word";
+    div.id=word;
+    div.textContent=word;
     wordsEl.appendChild(div);
   });
 }
 
-let selectedCells = [];
+// Selection logic (STRAIGHT LINE ONLY)
+let isMouseDown=false;
+let startCell=null;
+let currentSelection=[];
 
-gridEl.addEventListener("mousedown", e => {
+gridEl.addEventListener("mousedown", e=>{
   if (!e.target.classList.contains("cell")) return;
-  selectedCells = [];
+  isMouseDown=true;
+  startCell=e.target;
+  clearSelection();
 });
 
-gridEl.addEventListener("mouseover", e => {
-  if (e.buttons !== 1) return;
+gridEl.addEventListener("mouseover", e=>{
+  if (!isMouseDown) return;
   if (!e.target.classList.contains("cell")) return;
 
-  e.target.classList.add("selected");
-  selectedCells.push(e.target);
+  const cells = getLineCells(startCell, e.target);
+  highlightCells(cells);
 });
 
-gridEl.addEventListener("mouseup", () => {
-  const word = selectedCells.map(c => c.textContent).join("");
+document.addEventListener("mouseup", ()=>{
+  if (!isMouseDown) return;
+  isMouseDown=false;
+
+  const word = currentSelection.map(c=>c.textContent).join("");
 
   if (words.includes(word)) {
-    selectedCells.forEach(c => c.classList.add("found"));
+    currentSelection.forEach(c=>c.classList.add("found"));
     document.getElementById(word).classList.add("found");
   }
 
-  document.querySelectorAll(".selected").forEach(c => {
-    c.classList.remove("selected");
-  });
-
-  selectedCells = [];
+  clearTempSelection();
 });
 
+// Helpers
+function getLineCells(start, end) {
+  const r1 = +start.dataset.row;
+  const c1 = +start.dataset.col;
+  const r2 = +end.dataset.row;
+  const c2 = +end.dataset.col;
+
+  const dr = Math.sign(r2 - r1);
+  const dc = Math.sign(c2 - c1);
+
+  // enforce straight line
+  if (!(r1===r2 || c1===c2 || Math.abs(r2-r1)===Math.abs(c2-c1))) {
+    return [];
+  }
+
+  const cells = [];
+  let r=r1, c=c1;
+
+  while (true) {
+    const el = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
+    if (!el) break;
+    cells.push(el);
+    if (r===r2 && c===c2) break;
+    r+=dr;
+    c+=dc;
+  }
+
+  return cells;
+}
+
+function highlightCells(cells) {
+  clearTempSelection();
+  cells.forEach(c=>{
+    c.classList.add("selected");
+  });
+  currentSelection = cells;
+}
+
+function clearTempSelection() {
+  document.querySelectorAll(".selected").forEach(c=>{
+    c.classList.remove("selected");
+  });
+}
+
+function clearSelection() {
+  clearTempSelection();
+  currentSelection=[];
+}
+
+// Init
 words.forEach(placeWord);
 fillGrid();
 renderGrid();
