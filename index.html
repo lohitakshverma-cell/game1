@@ -41,23 +41,27 @@ h2 {
   margin-top: 3px;
 }
 
-/* WORDS */
+/* WORDS — BIGGER + CLEAN */
 #words {
-  margin: 10px 0;
+  margin: 12px 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .word-row {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .word {
-  padding: 8px 14px;
-  border-radius: 20px;
+  padding: 10px 16px;
+  border-radius: 22px;
   border: 1px solid #ddd;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -153,7 +157,6 @@ const directions = [
   [0,-1],[-1,0],[-1,-1],[1,-1]
 ];
 
-/* PLACE WORDS */
 function placeWord(word) {
   let placed = false;
   while (!placed) {
@@ -183,7 +186,6 @@ function placeWord(word) {
   }
 }
 
-/* FILL RANDOM */
 function fillGrid() {
   const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (let i=0;i<size;i++) {
@@ -197,7 +199,6 @@ function fillGrid() {
 
 const gridEl = document.getElementById("grid");
 
-/* RENDER GRID */
 function renderGrid() {
   gridEl.innerHTML="";
   grid.forEach((row,r)=>{
@@ -212,7 +213,6 @@ function renderGrid() {
   });
 }
 
-/* RENDER WORDS IN 2 ROWS */
 function renderWords() {
   const row1 = document.getElementById("row1");
   const row2 = document.getElementById("row2");
@@ -270,7 +270,6 @@ function end(){
   clear();
 }
 
-/* EVENTS */
 gridEl.addEventListener("mousedown",e=>{
   if(e.target.classList.contains("cell")) start(e.target);
 });
@@ -293,7 +292,6 @@ gridEl.addEventListener("touchmove",e=>{
 
 gridEl.addEventListener("touchend",end);
 
-/* LINE LOGIC */
 function line(a,b){
   const r1=+a.dataset.row,c1=+a.dataset.col;
   const r2=+b.dataset.row,c2=+b.dataset.col;
@@ -326,7 +324,6 @@ function clear(){
   document.querySelectorAll(".selected").forEach(c=>c.classList.remove("selected"));
 }
 
-/* INIT */
 words.forEach(placeWord);
 fillGrid();
 renderGrid();
