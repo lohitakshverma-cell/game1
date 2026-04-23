@@ -15,17 +15,6 @@ body {
   -webkit-user-select: none;
 }
 
-/* NAME SCREEN */
-#nameScreen {
-  position: fixed;
-  inset: 0;
-  background: #f7f7f7;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
 /* APP */
 #app {
   height: 100dvh;
@@ -47,7 +36,7 @@ h1 {
 }
 
 h2 {
-  font-size: 20px;
+  font-size: 35px;
   color: #888;
   margin-top: 3px;
 }
@@ -65,8 +54,10 @@ h2 {
   padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid #ddd;
-  font-size: 18px;
+
+  font-size: 25px;
   font-weight: 500;
+
   background: #fff;
   text-align: center;
   line-height: 1.3;
@@ -90,8 +81,10 @@ h2 {
   display: grid;
   grid-template-columns: repeat(11, 1fr);
   gap: 5px;
+
   width: 100%;
   aspect-ratio: 1;
+
   touch-action: none;
 }
 
@@ -99,9 +92,11 @@ h2 {
   background: #fafafa;
   border-radius: 10px;
   border: 1px solid #eee;
+
   display: flex;
   justify-content: center;
   align-items: center;
+
   font-size: clamp(15px, 4.5vw, 20px);
   font-weight: 600;
 }
@@ -120,52 +115,11 @@ h2 {
 
 <body>
 
-<!-- NAME SCREEN -->
-<div id="nameScreen">
-  <div style="width:95%; max-width:420px;">
-
-    <h2 style="text-align:center;margin-bottom:20px;font-size:20px;">
-      Enter Your Name
-    </h2>
-
-    <input 
-      id="playerName" 
-      placeholder="Your Name"
-      style="
-        width:100%;
-        padding:20px;
-        border-radius:18px;
-        border:1px solid #ccc;
-        font-size:18px;
-        box-sizing:border-box;
-      "
-    >
-
-    <button 
-      onclick="startGame()"
-      style="
-        width:100%;
-        margin-top:16px;
-        padding:22px;
-        border:none;
-        border-radius:18px;
-        background:#111;
-        color:white;
-        font-size:18px;
-        font-weight:700;
-      "
-    >
-      START GAME
-    </button>
-
-  </div>
-</div>
-
 <div id="app">
 
   <div id="header">
     <h1>MINIMALIST</h1>
-    <h2>TEAM ACTIVITY</h2>
+    <h2>Find What's Hidden in the Boxes</h2>
   </div>
 
   <div id="words"></div>
@@ -179,9 +133,7 @@ h2 {
 <script>
 const size = 11;
 
-let playerName = "";
-let startTime = 0;
-
+/* WORD + TWISTED HINTS */
 const wordHintPairs = [
   { word: "CRICKET", hints: ["Where silence breaks with a crack","White clothes tell stories","Patience meets chaos"] },
   { word: "BADMINTON", hints: ["A feather decides rallies","Fastest indoor chase","Light but ruthless"] },
@@ -193,25 +145,13 @@ const wordHintPairs = [
 ];
 
 const words = wordHintPairs.map(w => w.word);
+
 const grid = Array.from({ length: size }, () => Array(size).fill(""));
 
 const directions = [
   [0,1],[1,0],[1,1],[-1,1],
   [0,-1],[-1,0],[-1,-1],[1,-1]
 ];
-
-function startGame() {
-  const input = document.getElementById("playerName").value.trim();
-  if (!input) {
-    alert("Please enter your name");
-    return;
-  }
-
-  playerName = input;
-  document.getElementById("nameScreen").style.display = "none";
-
-  startTime = new Date().getTime();
-}
 
 function placeWord(word) {
   let placed = false;
@@ -255,6 +195,7 @@ function fillGrid() {
 
 const gridEl = document.getElementById("grid");
 
+/* RENDER GRID */
 function renderGrid() {
   gridEl.innerHTML="";
   grid.forEach((row,r)=>{
@@ -269,10 +210,12 @@ function renderGrid() {
   });
 }
 
+/* RANDOM HINT */
 function getRandomHint(hints){
   return hints[Math.floor(Math.random()*hints.length)];
 }
 
+/* RENDER HINTS */
 function renderWords() {
   const container = document.getElementById("words");
 
@@ -281,10 +224,12 @@ function renderWords() {
     div.className = "word";
     div.id = item.word;
     div.textContent = getRandomHint(item.hints);
+
     container.appendChild(div);
   });
 }
 
+/* SELECTION */
 let selecting=false;
 let startCell=null;
 let current=[];
@@ -322,23 +267,9 @@ function end(){
   }
 
   clear();
-
-  const allFound = words.every(w =>
-    document.getElementById(w).classList.contains("found")
-  );
-
-  if (allFound) {
-    const endTime = new Date().getTime();
-    const timeTaken = Math.floor((endTime - startTime) / 1000);
-
-    sendToGoogleSheet(playerName, timeTaken);
-
-    setTimeout(() => {
-      alert(`Completed in ${timeTaken} seconds`);
-    }, 200);
-  }
 }
 
+/* EVENTS */
 gridEl.addEventListener("mousedown",e=>{
   if(e.target.classList.contains("cell")) start(e.target);
 });
@@ -366,6 +297,7 @@ gridEl.addEventListener("touchend", e => {
   end();
 });
 
+/* LINE LOGIC */
 function line(a,b){
   const r1=+a.dataset.row,c1=+a.dataset.col;
   const r2=+b.dataset.row,c2=+b.dataset.col;
@@ -398,17 +330,7 @@ function clear(){
   document.querySelectorAll(".selected").forEach(c=>c.classList.remove("selected"));
 }
 
-function sendToGoogleSheet(name, time) {
-  fetch("YOUR_GOOGLE_SCRIPT_URL", {
-    method: "POST",
-    mode: "no-cors",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ name, time }),
-  });
-}
-
+/* INIT */
 words.forEach(placeWord);
 fillGrid();
 renderGrid();
