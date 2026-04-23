@@ -41,7 +41,7 @@ h2 {
   margin-top: 3px;
 }
 
-/* WORDS */
+/* WORDS (HINTS) */
 #words {
   margin: 12px 0 8px;
 }
@@ -54,11 +54,13 @@ h2 {
 }
 
 .word {
-  padding: 10px 16px;
-  border-radius: 22px;
+  padding: 10px 14px;
+  border-radius: 20px;
   border: 1px solid #ddd;
-  font-size: 25px;
+  font-size: 30px;
   font-weight: 500;
+  text-align: center;
+  max-width: 140px;
 }
 
 .word.found {
@@ -67,7 +69,7 @@ h2 {
   border: none;
 }
 
-/* GRID AREA */
+/* GRID */
 #grid-container {
   flex: 1;
   display: flex;
@@ -75,7 +77,6 @@ h2 {
   align-items: center;
 }
 
-/* GRID */
 #grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -84,10 +85,9 @@ h2 {
   width: 100%;
   aspect-ratio: 1;
 
-  touch-action: none; /* 🔥 critical fix */
+  touch-action: none;
 }
 
-/* CELLS */
 .cell {
   background: #fafafa;
   border-radius: 10px;
@@ -99,8 +99,6 @@ h2 {
 
   font-size: clamp(16px, 4.5vw, 22px);
   font-weight: 600;
-
-  transition: 0.1s;
 }
 
 .selected {
@@ -121,7 +119,7 @@ h2 {
 
   <div id="header">
     <h1>MINIMALIST</h1>
-    <h2>Find the Games</h2>
+    <h2>TEAM ACTIVITY</h2>
   </div>
 
   <div id="words">
@@ -138,15 +136,18 @@ h2 {
 <script>
 const size = 12;
 
-const words = [
-  "CRICKET",
-  "BADMINTON",
-  "TABLETENNIS",
-  "SWIMMING",
-  "TUGOFWAR",
-  "CARROM",
-  "FOOSBALL"
+/* WORD + TWISTED HINTS */
+const wordHintPairs = [
+  { word: "CRICKET", hints: ["Where silence breaks with a crack","White clothes tell stories","Patience meets chaos"] },
+  { word: "BADMINTON", hints: ["A feather decides rallies","Fastest indoor chase","Light but ruthless"] },
+  { word: "TABLETENNIS", hints: ["A game of rapid taps","Blink and it's over","Tiny table, big reflexes"] },
+  { word: "SWIMMING", hints: ["Moving without ground","Breath controls speed","Silent race"] },
+  { word: "TUGOFWAR", hints: ["Pull as one","Strength vs strength","A line you resist"] },
+  { word: "CARROM", hints: ["Flick decides outcome","Corners matter most","Precision beats force"] },
+  { word: "FOOSBALL", hints: ["Football without feet","Spin to win","Controlled by wrists"] }
 ];
+
+const words = wordHintPairs.map(w => w.word);
 
 const grid = Array.from({ length: size }, () => Array(size).fill(""));
 
@@ -155,6 +156,7 @@ const directions = [
   [0,-1],[-1,0],[-1,-1],[1,-1]
 ];
 
+/* PLACE WORDS */
 function placeWord(word) {
   let placed = false;
   while (!placed) {
@@ -195,6 +197,7 @@ function fillGrid() {
   }
 }
 
+/* RENDER */
 const gridEl = document.getElementById("grid");
 
 function renderGrid() {
@@ -211,17 +214,23 @@ function renderGrid() {
   });
 }
 
+/* RANDOM HINT */
+function getRandomHint(hints){
+  return hints[Math.floor(Math.random()*hints.length)];
+}
+
+/* RENDER HINTS */
 function renderWords() {
   const row1 = document.getElementById("row1");
   const row2 = document.getElementById("row2");
 
-  words.forEach((word, index) => {
+  wordHintPairs.forEach((item, index) => {
     const div = document.createElement("div");
     div.className = "word";
-    div.id = word;
-    div.textContent = word;
+    div.id = item.word;
+    div.textContent = getRandomHint(item.hints);
 
-    if (index < Math.ceil(words.length / 2)) {
+    if (index < Math.ceil(wordHintPairs.length / 2)) {
       row1.appendChild(div);
     } else {
       row2.appendChild(div);
@@ -247,10 +256,8 @@ function start(cell){
 
 function move(cell){
   if (!selecting || !cell || !cell.classList.contains("cell")) return;
-
   const cells=line(startCell,cell);
   if (cells.length < 2) return;
-
   highlight(cells);
 }
 
@@ -262,13 +269,16 @@ function end(){
 
   if (words.includes(word)) {
     current.forEach(c=>c.classList.add("found"));
-    document.getElementById(word).classList.add("found");
+
+    const el = document.getElementById(word);
+    el.classList.add("found");
+    el.textContent = word; // reveal actual word
   }
 
   clear();
 }
 
-/* MOUSE */
+/* EVENTS */
 gridEl.addEventListener("mousedown",e=>{
   if(e.target.classList.contains("cell")) start(e.target);
 });
@@ -277,7 +287,6 @@ gridEl.addEventListener("mouseover",e=>{
 });
 document.addEventListener("mouseup",end);
 
-/* TOUCH — FIXED */
 gridEl.addEventListener("touchstart", e => {
   e.preventDefault();
   const t = e.touches[0];
