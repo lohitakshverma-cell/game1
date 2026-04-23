@@ -2,10 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-
-<!-- ✅ FIXED viewport -->
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Minimalist Team Puzzle</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
@@ -19,32 +15,15 @@ body {
   -webkit-user-select: none;
 }
 
-/* START SCREEN */
-#start-screen {
+/* NAME SCREEN */
+#nameScreen {
   position: fixed;
   inset: 0;
   background: #f7f7f7;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 14px;
   z-index: 999;
-}
-
-#start-screen input {
-  padding: 12px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-
-#start-screen button {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  background: #111;
-  color: white;
 }
 
 /* APP */
@@ -62,13 +41,13 @@ body {
 }
 
 h1 {
-  font-size: 90px;
+  font-size: 22px;
   margin: 0;
   font-weight: 800;
 }
 
 h2 {
-  font-size: 25px;
+  font-size: 10px;
   color: #888;
   margin-top: 3px;
 }
@@ -86,7 +65,7 @@ h2 {
   padding: 10px 12px;
   border-radius: 14px;
   border: 1px solid #ddd;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
   background: #fff;
   text-align: center;
@@ -141,11 +120,18 @@ h2 {
 
 <body>
 
-<!-- START SCREEN -->
-<div id="start-screen">
-  <h2>Enter Your Name</h2>
-  <input type="text" id="playerName" placeholder="Your name" />
-  <button onclick="startGame()">Start</button>
+<!-- NAME SCREEN -->
+<div id="nameScreen">
+  <div style="text-align:center">
+    <h2>Enter Your Name</h2>
+    <input id="playerName" placeholder="Your Name"
+      style="padding:10px;border-radius:10px;border:1px solid #ccc;">
+    <br><br>
+    <button onclick="startGame()"
+      style="padding:10px 20px;border:none;border-radius:10px;background:#111;color:white;">
+      Start
+    </button>
+  </div>
 </div>
 
 <div id="app">
@@ -166,13 +152,10 @@ h2 {
 <script>
 const size = 11;
 
-/* TIMER */
 let playerName = "";
-let startTime = null;
-let endTime = null;
-let foundWords = new Set();
+let startTime = 0;
 
-/* WORDS */
+/* WORD + HINTS */
 const wordHintPairs = [
   { word: "CRICKET", hints: ["Where silence breaks with a crack","White clothes tell stories","Patience meets chaos"] },
   { word: "BADMINTON", hints: ["A feather decides rallies","Fastest indoor chase","Light but ruthless"] },
@@ -186,40 +169,47 @@ const wordHintPairs = [
 const words = wordHintPairs.map(w => w.word);
 const grid = Array.from({ length: size }, () => Array(size).fill(""));
 
-const directions = [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
+const directions = [
+  [0,1],[1,0],[1,1],[-1,1],
+  [0,-1],[-1,0],[-1,-1],[1,-1]
+];
 
-/* START */
+/* START GAME */
 function startGame() {
-  const name = document.getElementById("playerName").value.trim();
-  if (!name) return alert("Name required");
+  const input = document.getElementById("playerName").value.trim();
+  if (!input) {
+    alert("Please enter your name");
+    return;
+  }
 
-  playerName = name;
-  startTime = Date.now();
+  playerName = input;
+  document.getElementById("nameScreen").style.display = "none";
 
-  document.getElementById("start-screen").style.display = "none";
+  startTime = new Date().getTime();
 }
 
-/* GRID LOGIC (UNCHANGED) */
+/* WORD PLACEMENT */
 function placeWord(word) {
-  let placed=false;
-  while(!placed){
-    const dir=directions[Math.floor(Math.random()*directions.length)];
-    const row=Math.floor(Math.random()*size);
-    const col=Math.floor(Math.random()*size);
+  let placed = false;
+  while (!placed) {
+    const dir = directions[Math.floor(Math.random()*directions.length)];
+    const row = Math.floor(Math.random()*size);
+    const col = Math.floor(Math.random()*size);
 
-    let r=row,c=col,fits=true;
+    let r=row,c=col, fits=true;
 
-    for(let i=0;i<word.length;i++){
-      if(r<0||c<0||r>=size||c>=size||(grid[r][c]!==""&&grid[r][c]!==word[i])){
+    for (let i=0;i<word.length;i++) {
+      if (r<0||c<0||r>=size||c>=size ||
+         (grid[r][c]!=="" && grid[r][c]!==word[i])) {
         fits=false; break;
       }
       r+=dir[0]; c+=dir[1];
     }
 
-    if(!fits) continue;
+    if (!fits) continue;
 
-    r=row;c=col;
-    for(let i=0;i<word.length;i++){
+    r=row; c=col;
+    for (let i=0;i<word.length;i++) {
       grid[r][c]=word[i];
       r+=dir[0]; c+=dir[1];
     }
@@ -228,20 +218,21 @@ function placeWord(word) {
   }
 }
 
-function fillGrid(){
+function fillGrid() {
   const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  for(let i=0;i<size;i++){
-    for(let j=0;j<size;j++){
-      if(!grid[i][j]){
+  for (let i=0;i<size;i++) {
+    for (let j=0;j<size;j++) {
+      if (!grid[i][j]) {
         grid[i][j]=letters[Math.floor(Math.random()*26)];
       }
     }
   }
 }
 
-const gridEl=document.getElementById("grid");
+const gridEl = document.getElementById("grid");
 
-function renderGrid(){
+/* RENDER */
+function renderGrid() {
   gridEl.innerHTML="";
   grid.forEach((row,r)=>{
     row.forEach((cell,c)=>{
@@ -259,96 +250,98 @@ function getRandomHint(hints){
   return hints[Math.floor(Math.random()*hints.length)];
 }
 
-function renderWords(){
-  const container=document.getElementById("words");
-  wordHintPairs.forEach(item=>{
-    const div=document.createElement("div");
-    div.className="word";
-    div.id=item.word;
-    div.textContent=getRandomHint(item.hints);
+function renderWords() {
+  const container = document.getElementById("words");
+
+  wordHintPairs.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "word";
+    div.id = item.word;
+    div.textContent = getRandomHint(item.hints);
     container.appendChild(div);
   });
 }
 
-/* SELECTION */
-let selecting=false,startCell=null,current=[];
+/* GAME LOGIC */
+let selecting=false;
+let startCell=null;
+let current=[];
 
-function getCell(x,y){return document.elementFromPoint(x,y);}
+function getCell(x,y){
+  return document.elementFromPoint(x,y);
+}
 
-function start(cell){selecting=true;startCell=cell;current=[];clear();}
+function start(cell){
+  selecting=true;
+  startCell=cell;
+  current=[];
+  clear();
+}
 
 function move(cell){
-  if(!selecting||!cell||!cell.classList.contains("cell")) return;
+  if (!selecting || !cell || !cell.classList.contains("cell")) return;
   const cells=line(startCell,cell);
-  if(cells.length<2) return;
+  if (cells.length < 2) return;
   highlight(cells);
 }
 
 function end(){
-  if(!selecting) return;
+  if (!selecting) return;
   selecting=false;
 
   const word=current.map(c=>c.textContent).join("");
 
-  if(words.includes(word)&&!foundWords.has(word)){
-    foundWords.add(word);
-
+  if (words.includes(word)) {
     current.forEach(c=>c.classList.add("found"));
 
-    const el=document.getElementById(word);
+    const el = document.getElementById(word);
     el.classList.add("found");
-    el.textContent=word;
-
-    checkCompletion();
+    el.textContent = word;
   }
 
   clear();
-}
 
-function checkCompletion(){
-  if(foundWords.size===words.length){
-    endTime=Date.now();
-    const seconds=Math.floor((endTime-startTime)/1000);
+  /* CHECK COMPLETE */
+  const allFound = words.every(w =>
+    document.getElementById(w).classList.contains("found")
+  );
 
-    alert(`${playerName} finished in ${seconds}s`);
+  if (allFound) {
+    const endTime = new Date().getTime();
+    const timeTaken = Math.floor((endTime - startTime) / 1000);
 
-    saveResult(playerName, seconds);
+    sendToGoogleSheet(playerName, timeTaken);
+
+    setTimeout(() => {
+      alert(`Completed in ${timeTaken} seconds`);
+    }, 200);
   }
-}
-
-/* SAVE (FINAL FIXED) */
-function saveResult(name,time){
-  const data = JSON.parse(localStorage.getItem("results")) || [];
-  data.push({name,time});
-  localStorage.setItem("results", JSON.stringify(data));
-
-  fetch("YOUR_GOOGLE_SCRIPT_URL_HERE", {
-    method: "POST",
-    body: JSON.stringify({ name, time }),
-    headers: { "Content-Type": "application/json" }
-  }).catch(err => console.log("Sheet error:", err));
 }
 
 /* EVENTS */
 gridEl.addEventListener("mousedown",e=>{
   if(e.target.classList.contains("cell")) start(e.target);
 });
-gridEl.addEventListener("mouseover",e=>move(e.target));
+gridEl.addEventListener("mouseover",e=>{
+  move(e.target);
+});
 document.addEventListener("mouseup",end);
 
-gridEl.addEventListener("touchstart",e=>{
+gridEl.addEventListener("touchstart", e => {
   e.preventDefault();
-  const t=e.touches[0];
-  start(getCell(t.clientX,t.clientY));
-},{passive:false});
+  const t = e.touches[0];
+  const cell = getCell(t.clientX, t.clientY);
+  if (cell) start(cell);
+}, { passive: false });
 
-gridEl.addEventListener("touchmove",e=>{
+gridEl.addEventListener("touchmove", e => {
   e.preventDefault();
-  const t=e.touches[0];
-  move(getCell(t.clientX,t.clientY));
-},{passive:false});
+  const t = e.touches[0];
+  const cell = getCell(t.clientX, t.clientY);
+  move(cell);
+}, { passive: false });
 
-gridEl.addEventListener("touchend",e=>{
+gridEl.addEventListener("touchend", e => {
   e.preventDefault();
   end();
 });
@@ -361,15 +354,16 @@ function line(a,b){
   const dr=Math.sign(r2-r1);
   const dc=Math.sign(c2-c1);
 
-  if(!(r1===r2||c1===c2||Math.abs(r2-r1)===Math.abs(c2-c1))) return [];
+  if (!(r1===r2 || c1===c2 || Math.abs(r2-r1)===Math.abs(c2-c1))) return [];
 
   const cells=[];
   let r=r1,c=c1;
 
   while(true){
-    cells.push(document.querySelector(`[data-row='${r}'][data-col='${c}']`));
-    if(r===r2&&c===c2) break;
-    r+=dr;c+=dc;
+    const el=document.querySelector(`[data-row='${r}'][data-col='${c}']`);
+    cells.push(el);
+    if(r===r2 && c===c2) break;
+    r+=dr; c+=dc;
   }
 
   return cells;
@@ -383,6 +377,18 @@ function highlight(cells){
 
 function clear(){
   document.querySelectorAll(".selected").forEach(c=>c.classList.remove("selected"));
+}
+
+/* GOOGLE SHEET */
+function sendToGoogleSheet(name, time) {
+  fetch("YOUR_GOOGLE_SCRIPT_URL", {
+    method: "POST",
+    mode: "no-cors",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name, time }),
+  });
 }
 
 /* INIT */
