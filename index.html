@@ -20,7 +20,7 @@ body {
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  padding: 8px;
   box-sizing: border-box;
 }
 
@@ -47,15 +47,16 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 8px;
 }
 
 .word {
-  padding: 5px 10px;
+  padding: 8px 14px;
   border-radius: 20px;
   border: 1px solid #ddd;
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .word.found {
@@ -64,7 +65,7 @@ h2 {
   border: none;
 }
 
-/* GRID */
+/* GRID AREA */
 #grid-container {
   flex: 1;
   display: flex;
@@ -72,12 +73,13 @@ h2 {
   align-items: center;
 }
 
+/* GRID */
 #grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 5px;
+  gap: 4px;
 
-  width: min(95vw, 460px);
+  width: 100%;
   aspect-ratio: 1;
 }
 
@@ -91,7 +93,7 @@ h2 {
   justify-content: center;
   align-items: center;
 
-  font-size: clamp(14px, 3.5vw, 20px);
+  font-size: clamp(16px, 4vw, 22px);
   font-weight: 600;
 
   transition: 0.1s;
@@ -109,6 +111,19 @@ h2 {
 
 /* DESKTOP */
 @media (min-width: 768px) {
+
+  #app {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 40px;
+  }
+
+  h2 {
+    font-size: 12px;
+  }
+
   #grid {
     max-width: 520px;
   }
@@ -117,12 +132,9 @@ h2 {
     font-size: 18px;
   }
 
-  h1 {
-    font-size: 42px;
-  }
-
   .word {
-    font-size: 13px;
+    font-size: 14px;
+    padding: 10px 16px;
   }
 }
 </style>
@@ -165,6 +177,7 @@ const directions = [
   [0,-1],[-1,0],[-1,-1],[1,-1]
 ];
 
+/* PLACE WORDS */
 function placeWord(word) {
   let placed = false;
   while (!placed) {
@@ -194,6 +207,7 @@ function placeWord(word) {
   }
 }
 
+/* FILL RANDOM */
 function fillGrid() {
   const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (let i=0;i<size;i++) {
@@ -208,6 +222,7 @@ function fillGrid() {
 const gridEl = document.getElementById("grid");
 const wordsEl = document.getElementById("words");
 
+/* RENDER */
 function renderGrid() {
   gridEl.innerHTML="";
   grid.forEach((row,r)=>{
@@ -232,7 +247,7 @@ function renderWords() {
   });
 }
 
-/* TOUCH + MOUSE SELECTION */
+/* SELECTION SYSTEM (IMPROVED) */
 let selecting=false;
 let startCell=null;
 let current=[];
@@ -250,7 +265,12 @@ function start(cell){
 
 function move(cell){
   if (!selecting || !cell || !cell.classList.contains("cell")) return;
+
   const cells=line(startCell,cell);
+
+  // ignore jitter (very important for mobile)
+  if (cells.length < 2) return;
+
   highlight(cells);
 }
 
@@ -273,7 +293,7 @@ gridEl.addEventListener("mousedown",e=>{
   if(e.target.classList.contains("cell")) start(e.target);
 });
 gridEl.addEventListener("mouseover",e=>{
-  if(e.target.classList.contains("cell")) move(e.target);
+  move(e.target);
 });
 document.addEventListener("mouseup",end);
 
@@ -282,14 +302,16 @@ gridEl.addEventListener("touchstart",e=>{
   const cell=getCell(t.clientX,t.clientY);
   if(cell) start(cell);
 });
+
 gridEl.addEventListener("touchmove",e=>{
   const t=e.touches[0];
   const cell=getCell(t.clientX,t.clientY);
   move(cell);
 });
+
 gridEl.addEventListener("touchend",end);
 
-/* LOGIC */
+/* LINE LOGIC */
 function line(a,b){
   const r1=+a.dataset.row,c1=+a.dataset.col;
   const r2=+b.dataset.row,c2=+b.dataset.col;
@@ -322,6 +344,7 @@ function clear(){
   document.querySelectorAll(".selected").forEach(c=>c.classList.remove("selected"));
 }
 
+/* INIT */
 words.forEach(placeWord);
 fillGrid();
 renderGrid();
