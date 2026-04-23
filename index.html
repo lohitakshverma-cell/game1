@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
 
 <style>
+/* BASE (Mobile First) */
 body {
   font-family: 'Inter', sans-serif;
   background: #f7f7f7;
@@ -16,81 +17,77 @@ body {
   overflow: hidden;
 }
 
-/* APP LAYOUT */
+/* APP */
 #app {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  padding: 8px;
+  box-sizing: border-box;
 }
 
 /* HEADER */
 #header {
   text-align: center;
-  padding-top: 10px;
 }
 
 h1 {
-  font-size: clamp(28px, 5vw, 48px);
+  font-size: 26px;
   font-weight: 800;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   margin: 0;
 }
 
 h2 {
-  font-size: clamp(10px, 2vw, 13px);
-  letter-spacing: 4px;
+  font-size: 10px;
+  letter-spacing: 3px;
   color: #888;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
 #header::after {
   content: "";
   display: block;
-  width: 30px;
+  width: 25px;
   height: 2px;
   background: #111;
-  margin: 8px auto 0;
+  margin: 6px auto 0;
 }
 
-/* GAME AREA */
+/* GAME */
 #game {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
 }
 
 /* GRID */
 #grid {
   display: grid;
   grid-template-columns: repeat(15, 1fr);
-  gap: 4px;
+  gap: 3px;
 
-  width: min(90vw, 500px);
+  width: 95vw;
+  max-width: 420px;
   aspect-ratio: 1;
 }
 
 .cell {
   aspect-ratio: 1;
   background: #fafafa;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid #eee;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  font-size: clamp(10px, 2vw, 16px);
+  font-size: 11px;
   font-weight: 600;
 
   cursor: pointer;
-  transition: 0.15s;
-}
-
-.cell:hover {
-  background: #f1f1f1;
 }
 
 .selected {
@@ -102,15 +99,15 @@ h2 {
   color: white;
 }
 
-/* WORD SECTION */
+/* WORDS */
 #words-section {
   text-align: center;
-  max-width: 90vw;
+  width: 100%;
 }
 
 h3 {
-  margin: 5px 0;
-  font-size: clamp(12px, 2vw, 16px);
+  font-size: 12px;
+  margin: 6px 0;
 }
 
 #words {
@@ -120,17 +117,48 @@ h3 {
 }
 
 .word {
-  margin: 4px;
-  padding: 4px 10px;
+  margin: 3px;
+  padding: 3px 8px;
   border-radius: 20px;
   border: 1px solid #ddd;
-  font-size: clamp(10px, 2vw, 13px);
+  font-size: 10px;
 }
 
 .word.found {
   background: #111;
   color: white;
   border: none;
+}
+
+/* DESKTOP ENHANCEMENT */
+@media (min-width: 768px) {
+
+  h1 {
+    font-size: 42px;
+  }
+
+  h2 {
+    font-size: 12px;
+  }
+
+  #grid {
+    max-width: 500px;
+    gap: 5px;
+  }
+
+  .cell {
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .word {
+    font-size: 13px;
+    padding: 5px 12px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
 }
 </style>
 </head>
@@ -175,7 +203,6 @@ const directions = [
   [0,-1],[-1,0],[-1,-1],[1,-1]
 ];
 
-// Place words
 function placeWord(word) {
   let placed = false;
 
@@ -210,7 +237,6 @@ function placeWord(word) {
   }
 }
 
-// Fill grid
 function fillGrid() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (let i=0;i<size;i++) {
@@ -222,7 +248,6 @@ function fillGrid() {
   }
 }
 
-// Render
 const gridEl = document.getElementById("grid");
 const wordsEl = document.getElementById("words");
 
@@ -250,7 +275,7 @@ function renderWords() {
   });
 }
 
-// Selection logic
+/* SELECTION */
 let isMouseDown=false;
 let startCell=null;
 let currentSelection=[];
@@ -284,7 +309,7 @@ document.addEventListener("mouseup", ()=>{
   clearTempSelection();
 });
 
-// Helpers
+/* HELPERS */
 function getLineCells(start, end) {
   const r1 = +start.dataset.row;
   const c1 = +start.dataset.col;
@@ -330,7 +355,6 @@ function clearSelection() {
   currentSelection=[];
 }
 
-// Init
 words.forEach(placeWord);
 fillGrid();
 renderGrid();
