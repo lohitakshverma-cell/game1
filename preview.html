@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Minimalist Team Puzzle</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f7f7f7;
+    margin: 0;
+    text-align: center;
+  }
+
+  /* HEADER */
+  #header {
+    margin-top: 40px;
+  }
+
+  h1 {
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    margin: 0;
+  }
+
+  h2 {
+    font-size: 13px;
+    letter-spacing: 6px;
+    color: #888;
+    margin-top: 10px;
+    font-weight: 500;
+  }
+
+  #header::after {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 2px;
+    background: #111;
+    margin: 14px auto 0;
+    border-radius: 2px;
+  }
+
+  /* CONTAINER */
+  #container {
+    background: white;
+    padding: 30px;
+    margin: 30px auto;
+    border-radius: 22px;
+    width: fit-content;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.06);
+  }
+
+  /* GRID */
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(15, 40px);
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .cell {
+    width: 40px;
+    height: 40px;
+    background: #fafafa;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    line-height: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .cell:hover {
+    background: #f1f1f1;
+  }
+
+  .selected {
+    background: #dbeafe;
+  }
+
+  .found {
+    background: #111;
+    color: white;
+  }
+
+  /* WORD LIST */
+  h3 {
+    margin-top: 25px;
+    font-weight: 500;
+  }
+
+  #words {
+    margin-top: 10px;
+  }
+
+  .word {
+    display: inline-block;
+    margin: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+    transition: 0.2s;
+  }
+
+  .word.found {
+    background: #111;
+    color: white;
+    border: none;
+  }
+
+</style>
+</head>
+
+<body>
+
+<div id="header">
+  <h1>MINIMALIST</h1>
+  <h2>TEAM ACTIVITY</h2>
+</div>
+
+<div id="container">
+  <div id="grid"></div>
+
+  <h3>Find the words</h3>
+  <div id="words"></div>
+</div>
+
+<script>
+const size = 15;
+
+const words = [
+  "CRICKET",
+  "BADMINTON",
+  "TABLETENNIS",
+  "SWIMMING",
+  "TUGOFWAR",
+  "CARROM",
+  "FOOSBALL"
+];
+
+const grid = Array.from({ length: size }, () => Array(size).fill(""));
+
+const directions = [
+  [0, 1], [1, 0], [1, 1], [-1, 1]
+];
+
+function placeWord(word) {
+  let placed = false;
+
+  while (!placed) {
+    const dir = directions[Math.floor(Math.random() * directions.length)];
+    const row = Math.floor(Math.random() * size);
+    const col = Math.floor(Math.random() * size);
+
+    let r = row;
+    let c = col;
+    let fits = true;
+
+    for (let i = 0; i < word.length; i++) {
+      if (
+        r < 0 || r >= size ||
+        c < 0 || c >= size ||
+        (grid[r][c] !== "" && grid[r][c] !== word[i])
+      ) {
+        fits = false;
+        break;
+      }
+      r += dir[0];
+      c += dir[1];
+    }
+
+    if (!fits) continue;
+
+    r = row;
+    c = col;
+
+    for (let i = 0; i < word.length; i++) {
+      grid[r][c] = word[i];
+      r += dir[0];
+      c += dir[1];
+    }
+
+    placed = true;
+  }
+}
+
+function fillGrid() {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      if (grid[i][j] === "") {
+        grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
+      }
+    }
+  }
+}
+
+const gridEl = document.getElementById("grid");
+
+function renderGrid() {
+  gridEl.innerHTML = "";
+  grid.forEach((row, r) => {
+    row.forEach((cell, c) => {
+      const div = document.createElement("div");
+      div.className = "cell";
+      div.textContent = cell;
+      div.dataset.row = r;
+      div.dataset.col = c;
+      gridEl.appendChild(div);
+    });
+  });
+}
+
+const wordsEl = document.getElementById("words");
+
+function renderWords() {
+  words.forEach(word => {
+    const div = document.createElement("div");
+    div.className = "word";
+    div.id = word;
+    div.textContent = word;
+    wordsEl.appendChild(div);
+  });
+}
+
+let selectedCells = [];
+
+gridEl.addEventListener("mousedown", e => {
+  if (!e.target.classList.contains("cell")) return;
+  selectedCells = [];
+});
+
+gridEl.addEventListener("mouseover", e => {
+  if (e.buttons !== 1) return;
+  if (!e.target.classList.contains("cell")) return;
+
+  e.target.classList.add("selected");
+  selectedCells.push(e.target);
+});
+
+gridEl.addEventListener("mouseup", () => {
+  const word = selectedCells.map(c => c.textContent).join("");
+
+  if (words.includes(word)) {
+    selectedCells.forEach(c => c.classList.add("found"));
+    document.getElementById(word).classList.add("found");
+  }
+
+  document.querySelectorAll(".selected").forEach(c => {
+    c.classList.remove("selected");
+  });
+
+  selectedCells = [];
+});
+
+words.forEach(placeWord);
+fillGrid();
+renderGrid();
+renderWords();
+</script>
+
+</body>
+</html>
