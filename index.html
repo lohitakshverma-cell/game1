@@ -122,13 +122,36 @@ h2 {
 
 <!-- NAME SCREEN -->
 <div id="nameScreen">
-  <div style="text-align:center">
-    <h2>Enter Your Name</h2>
-    <input id="playerName" placeholder="Your Name"
-      style="padding:10px;border-radius:10px;border:1px solid #ccc;">
-    <br><br>
-    <button onclick="startGame()"
-      style="padding:10px 20px;border:none;border-radius:10px;background:#111;color:white;">
+  <div style="width:90%; max-width:320px;">
+    <h2 style="text-align:center;margin-bottom:16px;">Enter Your Name</h2>
+
+    <input 
+      id="playerName" 
+      placeholder="Your Name"
+      style="
+        width:100%;
+        padding:14px;
+        border-radius:12px;
+        border:1px solid #ccc;
+        font-size:16px;
+        box-sizing:border-box;
+      "
+    >
+
+    <button 
+      onclick="startGame()"
+      style="
+        width:100%;
+        margin-top:12px;
+        padding:14px;
+        border:none;
+        border-radius:12px;
+        background:#111;
+        color:white;
+        font-size:16px;
+        font-weight:600;
+      "
+    >
       Start
     </button>
   </div>
@@ -155,7 +178,6 @@ const size = 11;
 let playerName = "";
 let startTime = 0;
 
-/* WORD + HINTS */
 const wordHintPairs = [
   { word: "CRICKET", hints: ["Where silence breaks with a crack","White clothes tell stories","Patience meets chaos"] },
   { word: "BADMINTON", hints: ["A feather decides rallies","Fastest indoor chase","Light but ruthless"] },
@@ -174,7 +196,6 @@ const directions = [
   [0,-1],[-1,0],[-1,-1],[1,-1]
 ];
 
-/* START GAME */
 function startGame() {
   const input = document.getElementById("playerName").value.trim();
   if (!input) {
@@ -188,7 +209,6 @@ function startGame() {
   startTime = new Date().getTime();
 }
 
-/* WORD PLACEMENT */
 function placeWord(word) {
   let placed = false;
   while (!placed) {
@@ -231,7 +251,6 @@ function fillGrid() {
 
 const gridEl = document.getElementById("grid");
 
-/* RENDER */
 function renderGrid() {
   gridEl.innerHTML="";
   grid.forEach((row,r)=>{
@@ -262,7 +281,6 @@ function renderWords() {
   });
 }
 
-/* GAME LOGIC */
 let selecting=false;
 let startCell=null;
 let current=[];
@@ -301,7 +319,6 @@ function end(){
 
   clear();
 
-  /* CHECK COMPLETE */
   const allFound = words.every(w =>
     document.getElementById(w).classList.contains("found")
   );
@@ -318,7 +335,6 @@ function end(){
   }
 }
 
-/* EVENTS */
 gridEl.addEventListener("mousedown",e=>{
   if(e.target.classList.contains("cell")) start(e.target);
 });
@@ -346,7 +362,6 @@ gridEl.addEventListener("touchend", e => {
   end();
 });
 
-/* LINE */
 function line(a,b){
   const r1=+a.dataset.row,c1=+a.dataset.col;
   const r2=+b.dataset.row,c2=+b.dataset.col;
@@ -379,7 +394,6 @@ function clear(){
   document.querySelectorAll(".selected").forEach(c=>c.classList.remove("selected"));
 }
 
-/* GOOGLE SHEET */
 function sendToGoogleSheet(name, time) {
   fetch("YOUR_GOOGLE_SCRIPT_URL", {
     method: "POST",
@@ -391,7 +405,6 @@ function sendToGoogleSheet(name, time) {
   });
 }
 
-/* INIT */
 words.forEach(placeWord);
 fillGrid();
 renderGrid();
