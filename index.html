@@ -30,24 +30,20 @@ body {
 }
 
 h1 {
-  font-size: 100px;
+  font-size: 22px;
   margin: 0;
   font-weight: 800;
 }
 
 h2 {
-  font-size: 40px;
+  font-size: 10px;
   color: #888;
   margin-top: 3px;
 }
 
-/* WORDS — BIGGER + CLEAN */
+/* WORDS */
 #words {
   margin: 12px 0 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }
 
 .word-row {
@@ -61,7 +57,7 @@ h2 {
   padding: 10px 16px;
   border-radius: 22px;
   border: 1px solid #ddd;
-  font-size: 30px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -87,6 +83,8 @@ h2 {
 
   width: 100%;
   aspect-ratio: 1;
+
+  touch-action: none; /* 🔥 critical fix */
 }
 
 /* CELLS */
@@ -123,7 +121,7 @@ h2 {
 
   <div id="header">
     <h1>MINIMALIST</h1>
-    <h2>Find the Games</h2>
+    <h2>TEAM ACTIVITY</h2>
   </div>
 
   <div id="words">
@@ -270,6 +268,7 @@ function end(){
   clear();
 }
 
+/* MOUSE */
 gridEl.addEventListener("mousedown",e=>{
   if(e.target.classList.contains("cell")) start(e.target);
 });
@@ -278,20 +277,27 @@ gridEl.addEventListener("mouseover",e=>{
 });
 document.addEventListener("mouseup",end);
 
-gridEl.addEventListener("touchstart",e=>{
-  const t=e.touches[0];
-  const cell=getCell(t.clientX,t.clientY);
-  if(cell) start(cell);
-});
+/* TOUCH — FIXED */
+gridEl.addEventListener("touchstart", e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  const cell = getCell(t.clientX, t.clientY);
+  if (cell) start(cell);
+}, { passive: false });
 
-gridEl.addEventListener("touchmove",e=>{
-  const t=e.touches[0];
-  const cell=getCell(t.clientX,t.clientY);
+gridEl.addEventListener("touchmove", e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  const cell = getCell(t.clientX, t.clientY);
   move(cell);
+}, { passive: false });
+
+gridEl.addEventListener("touchend", e => {
+  e.preventDefault();
+  end();
 });
 
-gridEl.addEventListener("touchend",end);
-
+/* LINE LOGIC */
 function line(a,b){
   const r1=+a.dataset.row,c1=+a.dataset.col;
   const r2=+b.dataset.row,c2=+b.dataset.col;
@@ -324,6 +330,7 @@ function clear(){
   document.querySelectorAll(".selected").forEach(c=>c.classList.remove("selected"));
 }
 
+/* INIT */
 words.forEach(placeWord);
 fillGrid();
 renderGrid();
