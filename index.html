@@ -8,15 +8,14 @@
 
 <style>
 body {
-  font-family: 'Inter', sans-serif;
   margin: 0;
+  font-family: 'Inter', sans-serif;
   background: #f7f7f7;
   user-select: none;
   -webkit-user-select: none;
-  overflow: hidden;
 }
 
-/* FULL HEIGHT FIX FOR MOBILE */
+/* APP */
 #app {
   height: 100dvh;
   display: flex;
@@ -28,94 +27,35 @@ body {
 /* HEADER */
 #header {
   text-align: center;
+  margin-bottom: 6px;
 }
 
 h1 {
-  font-size: 24px;
-  font-weight: 800;
+  font-size: 22px;
   margin: 0;
+  font-weight: 800;
 }
 
 h2 {
   font-size: 10px;
   color: #888;
-  margin-top: 4px;
-  letter-spacing: 2px;
-}
-
-/* GAME AREA */
-#game {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-/* GRID WRAPPER (KEY FIX) */
-#grid-wrapper {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* GRID */
-#grid {
-  display: grid;
-  grid-template-columns: repeat(15, 1fr);
-  gap: 3px;
-
-  width: 100%;
-  max-width: 420px;
-
-  height: 100%;
-  max-height: 420px;
-}
-
-.cell {
-  background: #fafafa;
-  border-radius: 6px;
-  border: 1px solid #eee;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.selected {
-  background: #dbeafe;
-}
-
-.found {
-  background: #111;
-  color: white;
+  margin-top: 3px;
 }
 
 /* WORDS */
-#words-section {
-  text-align: center;
-}
-
-h3 {
-  font-size: 12px;
-  margin: 6px 0;
-}
-
 #words {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
 .word {
-  margin: 3px;
-  padding: 3px 8px;
+  padding: 5px 10px;
   border-radius: 20px;
   border: 1px solid #ddd;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .word.found {
@@ -124,12 +64,66 @@ h3 {
   border: none;
 }
 
+/* GRID */
+#grid-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 5px;
+
+  width: min(95vw, 460px);
+  aspect-ratio: 1;
+}
+
+/* CELLS */
+.cell {
+  background: #fafafa;
+  border-radius: 10px;
+  border: 1px solid #eee;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: clamp(14px, 3.5vw, 20px);
+  font-weight: 600;
+
+  transition: 0.1s;
+}
+
+.selected {
+  background: #dbeafe;
+  transform: scale(1.05);
+}
+
+.found {
+  background: #111;
+  color: white;
+}
+
 /* DESKTOP */
 @media (min-width: 768px) {
-  h1 { font-size: 40px; }
-  h2 { font-size: 12px; }
-  .cell { font-size: 16px; border-radius: 10px; }
-  #grid { max-width: 500px; max-height: 500px; }
+  #grid {
+    max-width: 520px;
+  }
+
+  .cell {
+    font-size: 18px;
+  }
+
+  h1 {
+    font-size: 42px;
+  }
+
+  .word {
+    font-size: 13px;
+  }
 }
 </style>
 </head>
@@ -143,23 +137,16 @@ h3 {
     <h2>TEAM ACTIVITY</h2>
   </div>
 
-  <div id="game">
+  <div id="words"></div>
 
-    <div id="grid-wrapper">
-      <div id="grid"></div>
-    </div>
-
-    <div id="words-section">
-      <h3>Find the words</h3>
-      <div id="words"></div>
-    </div>
-
+  <div id="grid-container">
+    <div id="grid"></div>
   </div>
 
 </div>
 
 <script>
-const size = 15;
+const size = 12;
 
 const words = [
   "CRICKET",
@@ -179,14 +166,13 @@ const directions = [
 ];
 
 function placeWord(word) {
-  let placed=false;
-
+  let placed = false;
   while (!placed) {
     const dir = directions[Math.floor(Math.random()*directions.length)];
     const row = Math.floor(Math.random()*size);
     const col = Math.floor(Math.random()*size);
 
-    let r=row, c=col, fits=true;
+    let r=row,c=col, fits=true;
 
     for (let i=0;i<word.length;i++) {
       if (r<0||c<0||r>=size||c>=size ||
@@ -219,8 +205,8 @@ function fillGrid() {
   }
 }
 
-const gridEl=document.getElementById("grid");
-const wordsEl=document.getElementById("words");
+const gridEl = document.getElementById("grid");
+const wordsEl = document.getElementById("words");
 
 function renderGrid() {
   gridEl.innerHTML="";
@@ -251,65 +237,62 @@ let selecting=false;
 let startCell=null;
 let current=[];
 
-function getCellFromPoint(x,y){
+function getCell(x,y){
   return document.elementFromPoint(x,y);
 }
 
-function handleStart(cell){
+function start(cell){
   selecting=true;
   startCell=cell;
   current=[];
-  clearTemp();
+  clear();
 }
 
-function handleMove(cell){
-  if (!selecting || !cell.classList.contains("cell")) return;
-  const cells = getLine(startCell, cell);
+function move(cell){
+  if (!selecting || !cell || !cell.classList.contains("cell")) return;
+  const cells=line(startCell,cell);
   highlight(cells);
 }
 
-function handleEnd(){
+function end(){
   if (!selecting) return;
   selecting=false;
 
-  const word = current.map(c=>c.textContent).join("");
+  const word=current.map(c=>c.textContent).join("");
 
   if (words.includes(word)) {
     current.forEach(c=>c.classList.add("found"));
     document.getElementById(word).classList.add("found");
   }
 
-  clearTemp();
+  clear();
 }
 
-/* MOUSE */
-gridEl.addEventListener("mousedown", e=>{
-  if (e.target.classList.contains("cell")) handleStart(e.target);
+/* EVENTS */
+gridEl.addEventListener("mousedown",e=>{
+  if(e.target.classList.contains("cell")) start(e.target);
 });
-gridEl.addEventListener("mouseover", e=>{
-  if (e.target.classList.contains("cell")) handleMove(e.target);
+gridEl.addEventListener("mouseover",e=>{
+  if(e.target.classList.contains("cell")) move(e.target);
 });
-document.addEventListener("mouseup", handleEnd);
+document.addEventListener("mouseup",end);
 
-/* TOUCH */
-gridEl.addEventListener("touchstart", e=>{
+gridEl.addEventListener("touchstart",e=>{
   const t=e.touches[0];
-  const cell=getCellFromPoint(t.clientX,t.clientY);
-  if (cell && cell.classList.contains("cell")) handleStart(cell);
+  const cell=getCell(t.clientX,t.clientY);
+  if(cell) start(cell);
 });
-
-gridEl.addEventListener("touchmove", e=>{
+gridEl.addEventListener("touchmove",e=>{
   const t=e.touches[0];
-  const cell=getCellFromPoint(t.clientX,t.clientY);
-  if (cell) handleMove(cell);
+  const cell=getCell(t.clientX,t.clientY);
+  move(cell);
 });
-
-gridEl.addEventListener("touchend", handleEnd);
+gridEl.addEventListener("touchend",end);
 
 /* LOGIC */
-function getLine(start,end){
-  const r1=+start.dataset.row, c1=+start.dataset.col;
-  const r2=+end.dataset.row, c2=+end.dataset.col;
+function line(a,b){
+  const r1=+a.dataset.row,c1=+a.dataset.col;
+  const r2=+b.dataset.row,c2=+b.dataset.col;
 
   const dr=Math.sign(r2-r1);
   const dc=Math.sign(c2-c1);
@@ -322,7 +305,7 @@ function getLine(start,end){
   while(true){
     const el=document.querySelector(`[data-row='${r}'][data-col='${c}']`);
     cells.push(el);
-    if (r===r2 && c===c2) break;
+    if(r===r2 && c===c2) break;
     r+=dr; c+=dc;
   }
 
@@ -330,12 +313,12 @@ function getLine(start,end){
 }
 
 function highlight(cells){
-  clearTemp();
+  clear();
   cells.forEach(c=>c.classList.add("selected"));
   current=cells;
 }
 
-function clearTemp(){
+function clear(){
   document.querySelectorAll(".selected").forEach(c=>c.classList.remove("selected"));
 }
 
