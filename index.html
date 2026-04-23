@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+
+<!-- ✅ FIXED viewport -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Minimalist Team Puzzle</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
@@ -29,7 +33,7 @@ body {
 }
 
 #start-screen input {
-  padding: 10px;
+  padding: 12px;
   font-size: 16px;
   border-radius: 8px;
   border: 1px solid #ccc;
@@ -162,13 +166,13 @@ h2 {
 <script>
 const size = 11;
 
-/* TIMER + USER */
+/* TIMER */
 let playerName = "";
 let startTime = null;
 let endTime = null;
 let foundWords = new Set();
 
-/* WORD + HINTS */
+/* WORDS */
 const wordHintPairs = [
   { word: "CRICKET", hints: ["Where silence breaks with a crack","White clothes tell stories","Patience meets chaos"] },
   { word: "BADMINTON", hints: ["A feather decides rallies","Fastest indoor chase","Light but ruthless"] },
@@ -180,15 +184,11 @@ const wordHintPairs = [
 ];
 
 const words = wordHintPairs.map(w => w.word);
-
 const grid = Array.from({ length: size }, () => Array(size).fill(""));
 
-const directions = [
-  [0,1],[1,0],[1,1],[-1,1],
-  [0,-1],[-1,0],[-1,-1],[1,-1]
-];
+const directions = [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
 
-/* START GAME */
+/* START */
 function startGame() {
   const name = document.getElementById("playerName").value.trim();
   if (!name) return alert("Name required");
@@ -199,28 +199,27 @@ function startGame() {
   document.getElementById("start-screen").style.display = "none";
 }
 
-/* PLACE WORD */
+/* GRID LOGIC (UNCHANGED) */
 function placeWord(word) {
-  let placed = false;
-  while (!placed) {
-    const dir = directions[Math.floor(Math.random()*directions.length)];
-    const row = Math.floor(Math.random()*size);
-    const col = Math.floor(Math.random()*size);
+  let placed=false;
+  while(!placed){
+    const dir=directions[Math.floor(Math.random()*directions.length)];
+    const row=Math.floor(Math.random()*size);
+    const col=Math.floor(Math.random()*size);
 
-    let r=row,c=col, fits=true;
+    let r=row,c=col,fits=true;
 
-    for (let i=0;i<word.length;i++) {
-      if (r<0||c<0||r>=size||c>=size ||
-         (grid[r][c]!=="" && grid[r][c]!==word[i])) {
+    for(let i=0;i<word.length;i++){
+      if(r<0||c<0||r>=size||c>=size||(grid[r][c]!==""&&grid[r][c]!==word[i])){
         fits=false; break;
       }
       r+=dir[0]; c+=dir[1];
     }
 
-    if (!fits) continue;
+    if(!fits) continue;
 
-    r=row; c=col;
-    for (let i=0;i<word.length;i++) {
+    r=row;c=col;
+    for(let i=0;i<word.length;i++){
       grid[r][c]=word[i];
       r+=dir[0]; c+=dir[1];
     }
@@ -229,21 +228,20 @@ function placeWord(word) {
   }
 }
 
-function fillGrid() {
+function fillGrid(){
   const letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  for (let i=0;i<size;i++) {
-    for (let j=0;j<size;j++) {
-      if (!grid[i][j]) {
+  for(let i=0;i<size;i++){
+    for(let j=0;j<size;j++){
+      if(!grid[i][j]){
         grid[i][j]=letters[Math.floor(Math.random()*26)];
       }
     }
   }
 }
 
-const gridEl = document.getElementById("grid");
+const gridEl=document.getElementById("grid");
 
-/* RENDER */
-function renderGrid() {
+function renderGrid(){
   gridEl.innerHTML="";
   grid.forEach((row,r)=>{
     row.forEach((cell,c)=>{
@@ -261,54 +259,45 @@ function getRandomHint(hints){
   return hints[Math.floor(Math.random()*hints.length)];
 }
 
-function renderWords() {
-  const container = document.getElementById("words");
-  wordHintPairs.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "word";
-    div.id = item.word;
-    div.textContent = getRandomHint(item.hints);
+function renderWords(){
+  const container=document.getElementById("words");
+  wordHintPairs.forEach(item=>{
+    const div=document.createElement("div");
+    div.className="word";
+    div.id=item.word;
+    div.textContent=getRandomHint(item.hints);
     container.appendChild(div);
   });
 }
 
 /* SELECTION */
-let selecting=false;
-let startCell=null;
-let current=[];
+let selecting=false,startCell=null,current=[];
 
-function getCell(x,y){
-  return document.elementFromPoint(x,y);
-}
+function getCell(x,y){return document.elementFromPoint(x,y);}
 
-function start(cell){
-  selecting=true;
-  startCell=cell;
-  current=[];
-  clear();
-}
+function start(cell){selecting=true;startCell=cell;current=[];clear();}
 
 function move(cell){
-  if (!selecting || !cell || !cell.classList.contains("cell")) return;
+  if(!selecting||!cell||!cell.classList.contains("cell")) return;
   const cells=line(startCell,cell);
-  if (cells.length < 2) return;
+  if(cells.length<2) return;
   highlight(cells);
 }
 
 function end(){
-  if (!selecting) return;
+  if(!selecting) return;
   selecting=false;
 
   const word=current.map(c=>c.textContent).join("");
 
-  if (words.includes(word) && !foundWords.has(word)) {
+  if(words.includes(word)&&!foundWords.has(word)){
     foundWords.add(word);
 
     current.forEach(c=>c.classList.add("found"));
 
-    const el = document.getElementById(word);
+    const el=document.getElementById(word);
     el.classList.add("found");
-    el.textContent = word;
+    el.textContent=word;
 
     checkCompletion();
   }
@@ -316,11 +305,10 @@ function end(){
   clear();
 }
 
-/* COMPLETE */
 function checkCompletion(){
-  if(foundWords.size === words.length){
-    endTime = Date.now();
-    const seconds = Math.floor((endTime - startTime)/1000);
+  if(foundWords.size===words.length){
+    endTime=Date.now();
+    const seconds=Math.floor((endTime-startTime)/1000);
 
     alert(`${playerName} finished in ${seconds}s`);
 
@@ -328,41 +316,39 @@ function checkCompletion(){
   }
 }
 
-/* SAVE */
+/* SAVE (FINAL FIXED) */
 function saveResult(name,time){
   const data = JSON.parse(localStorage.getItem("results")) || [];
   data.push({name,time});
   localStorage.setItem("results", JSON.stringify(data));
 
-  fetch("https://docs.google.com/spreadsheets/d/1Ls7m57YvPqUv8AWQgmRWaaRCjMi9jFrzSWN7eKPvVeU/edit?gid=0#gid=0", {
+  fetch("YOUR_GOOGLE_SCRIPT_URL_HERE", {
     method: "POST",
     body: JSON.stringify({ name, time }),
     headers: { "Content-Type": "application/json" }
-  }).catch(()=>{});
+  }).catch(err => console.log("Sheet error:", err));
 }
 
 /* EVENTS */
 gridEl.addEventListener("mousedown",e=>{
   if(e.target.classList.contains("cell")) start(e.target);
 });
-gridEl.addEventListener("mouseover",e=>{
-  move(e.target);
-});
+gridEl.addEventListener("mouseover",e=>move(e.target));
 document.addEventListener("mouseup",end);
 
-gridEl.addEventListener("touchstart", e => {
+gridEl.addEventListener("touchstart",e=>{
   e.preventDefault();
-  const t = e.touches[0];
-  start(getCell(t.clientX, t.clientY));
-}, { passive: false });
+  const t=e.touches[0];
+  start(getCell(t.clientX,t.clientY));
+},{passive:false});
 
-gridEl.addEventListener("touchmove", e => {
+gridEl.addEventListener("touchmove",e=>{
   e.preventDefault();
-  const t = e.touches[0];
-  move(getCell(t.clientX, t.clientY));
-}, { passive: false });
+  const t=e.touches[0];
+  move(getCell(t.clientX,t.clientY));
+},{passive:false});
 
-gridEl.addEventListener("touchend", e => {
+gridEl.addEventListener("touchend",e=>{
   e.preventDefault();
   end();
 });
@@ -375,16 +361,15 @@ function line(a,b){
   const dr=Math.sign(r2-r1);
   const dc=Math.sign(c2-c1);
 
-  if (!(r1===r2 || c1===c2 || Math.abs(r2-r1)===Math.abs(c2-c1))) return [];
+  if(!(r1===r2||c1===c2||Math.abs(r2-r1)===Math.abs(c2-c1))) return [];
 
   const cells=[];
   let r=r1,c=c1;
 
   while(true){
-    const el=document.querySelector(`[data-row='${r}'][data-col='${c}']`);
-    cells.push(el);
-    if(r===r2 && c===c2) break;
-    r+=dr; c+=dc;
+    cells.push(document.querySelector(`[data-row='${r}'][data-col='${c}']`));
+    if(r===r2&&c===c2) break;
+    r+=dr;c+=dc;
   }
 
   return cells;
